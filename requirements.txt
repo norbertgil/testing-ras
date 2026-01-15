@@ -1,0 +1,6 @@
+# Python dependencies for ANO Rotary Encoder
+# Install with: pip3 install -r requirements.txt
+
+adafruit-circuitpython-seesaw
+adafruit-blinka
+
