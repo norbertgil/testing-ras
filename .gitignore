@@ -1,0 +1,21 @@
+# Compiled Object files
+*.o
+*.obj
+
+# Executables
+ano_encoder_test
+*.exe
+*.out
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# Build artifacts
+*.a
+*.so
+*.dylib
+
