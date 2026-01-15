@@ -66,6 +66,20 @@ sudo ./ano_encoder_test
 
 **Note:** Root privileges (sudo) are required to access I2C devices.
 
+### Diagnostic Tool (Troubleshooting)
+
+If you're having issues with button detection or encoder rotation:
+
+```bash
+make diagnostic
+sudo make diagnostic
+```
+
+This runs a diagnostic tool that shows raw button states every second. It will help identify:
+- Which buttons are actually being detected
+- If the encoder position is changing
+- Hardware connection issues
+
 ### Clean Build
 
 ```bash

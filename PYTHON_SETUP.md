@@ -25,12 +25,43 @@ This guide will help you set up and test the ANO Rotary Encoder using Python on 
 
 ### 1. Install Python Dependencies
 
+#### Option A: Using Virtual Environment (Recommended for Externally Managed Environments)
+
+If you get an "externally managed environment" error, use a virtual environment:
+
+```bash
+# Create virtual environment
+python3 -m venv venv
+
+# Activate virtual environment
+source venv/bin/activate
+
+# Install dependencies
+pip install -r requirements.txt
+```
+
+**Or use the automated setup script:**
+
+```bash
+chmod +x setup_python_env.sh
+./setup_python_env.sh
+```
+
+#### Option B: System-wide Installation (Older Raspberry Pi OS)
+
 ```bash
 # Install required Python packages
 pip3 install -r requirements.txt
 
 # Or install manually:
 pip3 install adafruit-circuitpython-seesaw adafruit-blinka
+```
+
+#### Option C: Override External Management (Not Recommended)
+
+```bash
+# Use --break-system-packages flag (only if you understand the implications)
+pip3 install --break-system-packages -r requirements.txt
 ```
 
 ### 2. Verify Installation
@@ -54,7 +85,20 @@ Connect the ANO Encoder to your Raspberry Pi:
 
 ## Running the Test Script
 
-### Basic Test
+### If Using Virtual Environment
+
+```bash
+# Activate the virtual environment first
+source venv/bin/activate
+
+# Run the test script
+python test_ano_encoder.py
+
+# When done, deactivate
+deactivate
+```
+
+### If Installed System-wide
 
 ```bash
 python3 test_ano_encoder.py
@@ -128,11 +172,9 @@ Press Ctrl+C to exit.
 - Check that you're using the ANO Rotary Encoder
 
 ### ImportError: No module named 'board' or 'adafruit_seesaw'
-- Run: `pip3 install adafruit-circuitpython-seesaw adafruit-blinka`
-- You may need to use `--break-system-packages` flag on newer Raspberry Pi OS:
-  ```bash
-  pip3 install --break-system-packages adafruit-circuitpython-seesaw adafruit-blinka
-  ```
+- If using a virtual environment, make sure it's activated: `source venv/bin/activate`
+- Install dependencies: `pip install -r requirements.txt`
+- For externally managed environments, use the setup script: `./setup_python_env.sh`
 
 ### Permission Denied
 - Make sure you're running as a user with I2C permissions
