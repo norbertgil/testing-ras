@@ -10,11 +10,14 @@
 #define SEESAW_ENCODER_BASE 0x11
 
 #define SEESAW_STATUS_VERSION 0x02
+#define SEESAW_STATUS_SWRST 0x7F
 #define SEESAW_GPIO_DIRSET_BULK 0x02
 #define SEESAW_GPIO_BULK 0x04
 #define SEESAW_GPIO_PULLENSET 0x0B
 #define SEESAW_ENCODER_POSITION 0x00
 #define SEESAW_ENCODER_DELTA 0x01
+#define SEESAW_ENCODER_INTENSET 0x10
+#define SEESAW_ENCODER_INTENCLR 0x20
 
 // Button pins
 #define SS_SWITCH_SELECT 1
@@ -34,6 +37,8 @@ public:
     // Encoder functions
     int32_t getEncoderPosition();
     int32_t getEncoderDelta();
+    void setEncoderPosition(int32_t position);
+    void enableEncoder();
     
     // GPIO functions
     void pinMode(uint8_t pin, uint8_t mode);

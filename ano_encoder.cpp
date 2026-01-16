@@ -48,6 +48,15 @@ bool ANOEncoder::begin() {
     pinMode(SS_SWITCH_DOWN, 0x02);
     pinMode(SS_SWITCH_RIGHT, 0x02);
     
+    // Enable encoder - THIS IS CRITICAL!
+    enableEncoder();
+    
+    // Set initial encoder position to 0
+    setEncoderPosition(0);
+    
+    // Small delay to let encoder initialize
+    usleep(10000);
+    
     return true;
 }
 
@@ -76,6 +85,20 @@ int32_t ANOEncoder::getEncoderDelta() {
                ((int32_t)buffer[2] << 8) | buffer[3];
     }
     return 0;
+}
+
+void ANOEncoder::setEncoderPosition(int32_t position) {
+    uint8_t buffer[4];
+    buffer[0] = (position >> 24) & 0xFF;
+    buffer[1] = (position >> 16) & 0xFF;
+    buffer[2] = (position >> 8) & 0xFF;
+    buffer[3] = position & 0xFF;
+    writeRegister(SEESAW_ENCODER_BASE, SEESAW_ENCODER_POSITION, buffer, 4);
+}
+
+void ANOEncoder::enableEncoder() {
+    uint8_t buffer[1] = {0x01};
+    writeRegister(SEESAW_ENCODER_BASE, SEESAW_ENCODER_INTENSET, buffer, 1);
 }
 
 void ANOEncoder::pinMode(uint8_t pin, uint8_t mode) {
