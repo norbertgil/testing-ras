@@ -4,6 +4,7 @@
 #include <sys/ioctl.h>
 #include <linux/i2c-dev.h>
 #include <cstring>
+#include <cstdint>
 #include <iomanip>
 
 // Test raw I2C communication with the encoder
