@@ -5,6 +5,8 @@
 #include <linux/i2c-dev.h>
 #include <cstring>
 #include <iostream>
+#include <errno.h>
+#include <cstring>
 
 ANOEncoder::ANOEncoder(uint8_t address, const char* i2c_device)
     : i2c_fd(-1), device_address(address) {
@@ -23,19 +25,21 @@ ANOEncoder::~ANOEncoder() {
 
 bool ANOEncoder::begin() {
     if (i2c_fd < 0) {
+        std::cerr << "ERROR: I2C file descriptor is invalid" << std::endl;
         return false;
     }
     
     // Set I2C slave address
     if (ioctl(i2c_fd, I2C_SLAVE, device_address) < 0) {
-        std::cerr << "Failed to set I2C slave address" << std::endl;
+        std::cerr << "Failed to set I2C slave address: " << strerror(errno) << std::endl;
         return false;
     }
     
     std::cout << "DEBUG: I2C address set to 0x" << std::hex << (int)device_address << std::dec << std::endl;
     
-    // Small delay after opening
-    usleep(10000);
+    // Większe opóźnienie po otwarciu - seesaw potrzebuje czasu
+    std::cout << "DEBUG: Waiting for seesaw to be ready..." << std::endl;
+    usleep(100000); // 100ms zamiast 10ms
     
     // Check version (dokładnie jak Python: seesaw.get_version())
     uint32_t version = getVersion();
@@ -154,32 +158,64 @@ bool ANOEncoder::writeRegister(uint8_t reg_base, uint8_t reg_addr, uint8_t* data
     buffer[1] = reg_addr;
     memcpy(buffer + 2, data, length);
     
+    std::cout << "DEBUG: Writing register 0x" << std::hex << (int)reg_base 
+              << " : 0x" << (int)reg_addr << ", " << std::dec << (int)length << " bytes" << std::endl;
+    
     ssize_t written = write(i2c_fd, buffer, length + 2);
     if (written != (length + 2)) {
-        std::cerr << "DEBUG: Write failed, expected " << (length + 2) << " bytes, wrote " << written << std::endl;
+        std::cerr << "ERROR: Write failed, expected " << (length + 2) 
+                  << " bytes, wrote " << written 
+                  << ", errno: " << strerror(errno) << std::endl;
         return false;
     }
+    
+    std::cout << "DEBUG: Write OK" << std::endl;
+    usleep(5000); // Małe opóźnienie po zapisie
     return true;
 }
 
 bool ANOEncoder::readRegister(uint8_t reg_base, uint8_t reg_addr, uint8_t* data, uint8_t length) {
     uint8_t command[2] = {reg_base, reg_addr};
     
+    std::cout << "DEBUG: Reading register 0x" << std::hex << (int)reg_base 
+              << " : 0x" << (int)reg_addr << std::dec << std::endl;
+    
     // Write command
-    if (write(i2c_fd, command, 2) != 2) {
-        std::cerr << "DEBUG: Failed to write read command" << std::endl;
+    ssize_t written = write(i2c_fd, command, 2);
+    if (written != 2) {
+        std::cerr << "ERROR: Failed to write read command, wrote " << written 
+                  << " bytes, errno: " << strerror(errno) << std::endl;
         return false;
     }
     
-    // Delay for seesaw to process (Python też ma to w swojej bibliotece)
-    usleep(2000); // 2ms - zwiększony z 1ms
+    std::cout << "DEBUG: Write OK, waiting for response..." << std::endl;
+    
+    // Większe opóźnienie - seesaw potrzebuje czasu na przetworzenie
+    usleep(10000); // 10ms zamiast 2ms!
     
     // Read response
     ssize_t bytes_read = read(i2c_fd, data, length);
     if (bytes_read != length) {
-        std::cerr << "DEBUG: Read failed, expected " << (int)length << " bytes, got " << bytes_read << std::endl;
+        std::cerr << "ERROR: Read failed, expected " << (int)length 
+                  << " bytes, got " << bytes_read 
+                  << ", errno: " << strerror(errno) << std::endl;
+        
+        // Pokaż co udało się przeczytać
+        if (bytes_read > 0) {
+            std::cout << "Partial data: ";
+            for (ssize_t i = 0; i < bytes_read; i++) {
+                std::cout << std::hex << (int)data[i] << " ";
+            }
+            std::cout << std::dec << std::endl;
+        }
         return false;
     }
+    
+    std::cout << "DEBUG: Read OK, got " << bytes_read << " bytes: ";
+    for (int i = 0; i < bytes_read; i++) {
+        std::cout << std::hex << (int)data[i] << " ";
+    }
+    std::cout << std::dec << std::endl;
     
     return true;
 }
