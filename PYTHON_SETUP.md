@@ -6,7 +6,22 @@ This guide will help you set up and test the ANO Rotary Encoder using the offici
 
 ## Prerequisites
 
-### 1. Enable I2C on Raspberry Pi
+### 1. Install System Dependencies
+
+First, install required system packages:
+
+```bash
+chmod +x install_system_deps.sh
+./install_system_deps.sh
+```
+
+This installs:
+- `python3-dev` - Python development headers
+- `swig` - Required for building native extensions
+- `i2c-tools` - I2C utilities
+- `libi2c-dev` - I2C development library
+
+### 2. Enable I2C on Raspberry Pi
 
 ```bash
 sudo raspi-config
@@ -15,7 +30,7 @@ sudo raspi-config
 - Navigate to: **Interface Options → I2C → Enable**
 - Reboot after enabling: `sudo reboot`
 
-### 2. **CRITICAL: Set I2C Speed to 400 kHz**
+### 3. **CRITICAL: Set I2C Speed to 400 kHz**
 
 The ANO Encoder requires 400 kHz (default is 100 kHz):
 
@@ -25,7 +40,7 @@ chmod +x setup_i2c_speed.sh
 sudo reboot
 ```
 
-### 3. Verify I2C Connection
+### 4. Verify I2C Connection
 
 ```bash
 # Install i2c-tools if needed
@@ -149,9 +164,10 @@ Up button released
 
 ```bash
 # One-time setup
-chmod +x setup_python_env.sh setup_i2c_speed.sh check_i2c_speed.sh
-./setup_i2c_speed.sh  # Set I2C to 400 kHz, then reboot
-./setup_python_env.sh # Install Python packages
+chmod +x install_system_deps.sh setup_python_env.sh setup_i2c_speed.sh check_i2c_speed.sh
+./install_system_deps.sh  # Install system packages (swig, python3-dev, etc)
+./setup_i2c_speed.sh      # Set I2C to 400 kHz, then reboot
+./setup_python_env.sh     # Install Python packages
 
 # Every time you want to test
 source venv/bin/activate

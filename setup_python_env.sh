@@ -14,6 +14,32 @@ if [ ! -f /proc/device-tree/model ] || ! grep -q "Raspberry Pi" /proc/device-tre
     echo ""
 fi
 
+# Check for required system packages
+echo "Checking system dependencies..."
+MISSING_DEPS=()
+
+if ! command -v swig &> /dev/null; then
+    MISSING_DEPS+=("swig")
+fi
+
+if ! dpkg -s python3-dev &> /dev/null; then
+    MISSING_DEPS+=("python3-dev")
+fi
+
+if [ ${#MISSING_DEPS[@]} -ne 0 ]; then
+    echo ""
+    echo "⚠️  Missing system dependencies: ${MISSING_DEPS[*]}"
+    echo ""
+    echo "Please run first:"
+    echo "  chmod +x install_system_deps.sh"
+    echo "  ./install_system_deps.sh"
+    echo ""
+    exit 1
+fi
+
+echo "✓ System dependencies OK"
+echo ""
+
 # Create virtual environment
 echo "Creating Python virtual environment..."
 if [ -d "venv" ]; then

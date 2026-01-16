@@ -11,5 +11,7 @@
 # Option 2: Install with --break-system-packages flag
 #   pip3 install --break-system-packages -r requirements.txt
 
-adafruit-circuitpython-seesaw
+# Core dependencies
+rpi-lgpio
 adafruit-blinka
+adafruit-circuitpython-seesaw
