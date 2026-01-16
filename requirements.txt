@@ -1,0 +1,15 @@
+# Python dependencies for ANO Rotary Encoder
+# Based on official Adafruit documentation:
+# https://cdn-learn.adafruit.com/downloads/pdf/adafruit-ano-rotary-navigation-encoder-to-i2c-stemma-qt-adapter.pdf
+# 
+# For externally managed environments (Raspberry Pi OS Bookworm+):
+# Option 1 (Recommended): Use a virtual environment
+#   python3 -m venv venv
+#   source venv/bin/activate
+#   pip install -r requirements.txt
+#
+# Option 2: Install with --break-system-packages flag
+#   pip3 install --break-system-packages -r requirements.txt
+
+adafruit-circuitpython-seesaw
+adafruit-blinka
