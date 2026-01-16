@@ -1,6 +1,6 @@
-# Adafruit ANO Rotary Encoder - Raspberry Pi C++ Project
+# Adafruit ANO Rotary Encoder - Raspberry Pi C++ + Python
 
-This project provides a C++ library and example code for interfacing with the Adafruit ANO Rotary Navigation Encoder to I2C STEMMA QT Adapter on a Raspberry Pi.
+This project provides a C++ application that uses Python backend to interface with the Adafruit ANO Rotary Navigation Encoder to I2C STEMMA QT Adapter on a Raspberry Pi.
 
 ## Hardware Setup
 
@@ -76,41 +76,37 @@ i2cdetect -y 1
 
 You should see a device at address 0x49 (or whichever address you configured).
 
-## Building the Project
+## Quick Start
 
-### Compile
+### 1. Install System Dependencies
+
+```bash
+chmod +x install_system_deps.sh
+./install_system_deps.sh
+```
+
+### 2. Setup Python Environment
+
+```bash
+chmod +x setup_python_env_system_packages.sh
+./setup_python_env_system_packages.sh
+```
+
+### 3. Build and Run
 
 ```bash
 make
+make run
 ```
 
-### Run
+The C++ application will start and display encoder position and button presses in real-time.
+
+### Test Python Backend Directly (Optional)
 
 ```bash
-sudo make run
+chmod +x test_python_direct.sh
+./test_python_direct.sh
 ```
-
-Or run directly:
-
-```bash
-sudo ./ano_encoder_test
-```
-
-**Note:** Root privileges (sudo) are required to access I2C devices.
-
-### Diagnostic Tool (Troubleshooting)
-
-If you're having issues with button detection or encoder rotation:
-
-```bash
-make diagnostic
-sudo make diagnostic
-```
-
-This runs a diagnostic tool that shows raw button states every second. It will help identify:
-- Which buttons are actually being detected
-- If the encoder position is changing
-- Hardware connection issues
 
 ### Clean Build
 
@@ -118,44 +114,46 @@ This runs a diagnostic tool that shows raw button states every second. It will h
 make clean
 ```
 
+## Architecture
+
+- **C++ Application**: Main program that displays encoder data
+- **Python Backend**: Uses Adafruit libraries to communicate with encoder via I2C
+- **Hybrid Approach**: C++ for UI/logic, Python for hardware communication
+
 ## Features
 
-- **I2C Communication**: Uses Linux I2C device interface (`/dev/i2c-1`)
-- **Seesaw Protocol**: Implements the seesaw firmware communication protocol
-- **Encoder Tracking**: Reads rotary encoder position and delta values
-- **Button Support**: All 5 buttons (Select, Up, Down, Left, Right)
-- **Product Verification**: Checks for correct firmware (product ID 5740)
+- ✅ Rotary encoder position tracking with change delta
+- ✅ All 5 buttons supported (Select, Up, Down, Left, Right)
+- ✅ Real-time event display
+- ✅ Automatic I2C communication via Python
+- ✅ Clean separation between C++ logic and Python hardware layer
 
 ## Project Structure
 
 ```
 .
-├── ano_encoder.h       # Header file with class definition
-├── ano_encoder.cpp     # Implementation of the ANOEncoder class
-├── main.cpp            # Example usage and test program
-├── Makefile            # Build configuration
-└── README.md           # This file
+├── encoder_app.cpp                         # C++ application (main program)
+├── encoder_reader.py                       # Python backend (reads encoder via I2C)
+├── Makefile                                # Build configuration
+├── install_system_deps.sh                  # Install system packages
+├── setup_python_env_system_packages.sh     # Setup Python environment
+├── setup_i2c_speed.sh                      # Configure I2C to 400 kHz
+├── check_i2c_speed.sh                      # Check I2C configuration
+├── test_python_direct.sh                   # Test Python backend
+├── requirements.txt                        # Python dependencies
+└── README.md                               # This file
 ```
 
-## API Reference
+## How It Works
 
-### Constructor
-
-```cpp
-ANOEncoder(uint8_t address = 0x49, const char* i2c_device = "/dev/i2c-1");
-```
-
-### Methods
-
-- `bool begin()` - Initialize the encoder
-- `uint32_t getVersion()` - Get firmware version
-- `int32_t getEncoderPosition()` - Get absolute encoder position
-- `int32_t getEncoderDelta()` - Get encoder change since last read
-- `bool isSelectPressed()` - Check if center button is pressed
-- `bool isUpPressed()` - Check if up button is pressed
-- `bool isDownPressed()` - Check if down button is pressed
-- `bool isLeftPressed()` - Check if left button is pressed
-- `bool isRightPressed()` - Check if right button is pressed
+1. **C++ Program** (`encoder_app.cpp`) starts and launches Python backend
+2. **Python Script** (`encoder_reader.py`) initializes encoder and continuously reads:
+   - Encoder position changes
+   - Button press/release events
+3. **Communication**: Python sends data to C++ via stdout in simple format:
+   - `ENCODER:123` - encoder position
+   - `BUTTON:SELECT:PRESSED` - button event
+4. **C++ Display**: Formats and displays data with emojis and formatting
 
 ## Custom I2C Address
 

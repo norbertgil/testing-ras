@@ -22,25 +22,34 @@ int main() {
     // Obsługa Ctrl+C
     signal(SIGINT, signal_handler);
     
-    // Uruchom Python script
+    // Uruchom Python script - użyj bezpośrednio pythona z venv
     std::cout << "Uruchamiam Python backend..." << std::endl;
     
-    FILE* pipe = popen("source venv/bin/activate 2>/dev/null && python encoder_reader.py 2>&1", "r");
-    if (!pipe) {
-        std::cerr << "❌ Nie można uruchomić Python script!" << std::endl;
-        std::cerr << "Upewnij się że:\n";
-        std::cerr << "  1. Środowisko venv jest skonfigurowane: ./setup_python_env_system_packages.sh\n";
-        std::cerr << "  2. Plik encoder_reader.py istnieje\n";
+    // Sprawdź czy venv istnieje
+    if (access("venv/bin/python", X_OK) != 0) {
+        std::cerr << "❌ Nie znaleziono venv/bin/python" << std::endl;
+        std::cerr << "Uruchom najpierw: ./setup_python_env_system_packages.sh" << std::endl;
         return 1;
     }
+    
+    // Uruchom bezpośrednio z venv Python
+    FILE* pipe = popen("venv/bin/python encoder_reader.py 2>&1", "r");
+    if (!pipe) {
+        std::cerr << "❌ Nie można uruchomić Python script!" << std::endl;
+        return 1;
+    }
+    
+    std::cout << "Python uruchomiony, czytam dane..." << std::endl;
     
     char buffer[256];
     bool ready = false;
     int last_position = 0;
+    int line_count = 0;
     
-    std::cout << "Czekam na inicjalizację..." << std::endl;
+    std::cout << "Czekam na inicjalizację...\n" << std::endl;
     
     while (running && fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+        line_count++;
         // Usuń znak nowej linii
         buffer[strcspn(buffer, "\n")] = 0;
         
@@ -91,9 +100,15 @@ int main() {
     }
     
     std::cout << "\n\nZamykanie..." << std::endl;
-    pclose(pipe);
+    int status = pclose(pipe);
     
-    std::cout << "Zakończono." << std::endl;
+    if (line_count == 0) {
+        std::cerr << "\n❌ Python script nie zwrócił żadnych danych!" << std::endl;
+        std::cerr << "Spróbuj uruchomić ręcznie:" << std::endl;
+        std::cerr << "  venv/bin/python encoder_reader.py" << std::endl;
+    }
+    
+    std::cout << "Zakończono (przeczytano " << line_count << " linii)." << std::endl;
     
     return 0;
 }

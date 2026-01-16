@@ -4,13 +4,26 @@ Prosty skrypt do odczytu ANO encodera
 Drukuje dane w formacie: ENCODER:position BUTTON:name
 """
 import sys
-import board
-from adafruit_seesaw import seesaw, rotaryio, digitalio
+import time
+
+# Debug start
+print("STARTING", flush=True)
+
+try:
+    import board
+    from adafruit_seesaw import seesaw, rotaryio, digitalio
+    print("IMPORTS_OK", flush=True)
+except ImportError as e:
+    print(f"ERROR:Import failed: {e}", flush=True)
+    sys.exit(1)
 
 try:
     # Inicjalizacja
+    print("INIT_I2C", flush=True)
     i2c = board.I2C()
+    print("INIT_SEESAW", flush=True)
     ss = seesaw.Seesaw(i2c, addr=0x49)
+    print("SEESAW_OK", flush=True)
     
     # Sprawdź produkt
     product_id = (ss.get_version() >> 16) & 0xFFFF
