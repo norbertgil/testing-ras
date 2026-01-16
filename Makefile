@@ -5,8 +5,10 @@ DIAGNOSTIC = test_diagnostic
 ENCODER_ONLY = test_encoder_only
 I2C_RAW = test_i2c_raw
 COMPARE = compare_test
+SIMPLE = test_simple
+FIXED = ano_encoder_test_fixed
 
-all: $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE)
+all: $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE) $(SIMPLE) $(FIXED)
 
 $(TARGET): main.cpp ano_encoder.cpp
 	$(CXX) $(CXXFLAGS) -o $(TARGET) main.cpp ano_encoder.cpp
@@ -23,8 +25,14 @@ $(I2C_RAW): test_i2c_raw.cpp
 $(COMPARE): compare_test.cpp ano_encoder.cpp
 	$(CXX) $(CXXFLAGS) -o $(COMPARE) compare_test.cpp ano_encoder.cpp
 
+$(SIMPLE): test_simple.cpp ano_encoder_fixed.cpp
+	$(CXX) $(CXXFLAGS) -o $(SIMPLE) test_simple.cpp ano_encoder_fixed.cpp
+
+$(FIXED): main.cpp ano_encoder_fixed.cpp
+	$(CXX) $(CXXFLAGS) -o $(FIXED) main.cpp ano_encoder_fixed.cpp
+
 clean:
-	rm -f $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE)
+	rm -f $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE) $(SIMPLE) $(FIXED)
 
 run: $(TARGET)
 	sudo ./$(TARGET)
@@ -40,4 +48,10 @@ rawtest: $(I2C_RAW)
 
 compare: $(COMPARE)
 	sudo ./$(COMPARE)
+
+simple: $(SIMPLE)
+	sudo ./$(SIMPLE)
+
+fixed: $(FIXED)
+	sudo ./$(FIXED)
 
