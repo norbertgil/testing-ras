@@ -88,6 +88,31 @@ int main() {
         }
     }
     
+    // WAŻNE: Włącz encoder PRZED odczytem!
+    // Python robi to w rotaryio.IncrementalEncoder.__init__()
+    std::cout << "\n>>> Włączam encoder..." << std::endl;
+    
+    // Włącz encoder interrupt (rejestr 0x11:0x10, wartość 0x00000001)
+    uint8_t enable_cmd[6] = {0x11, 0x10, 0x00, 0x00, 0x00, 0x01};
+    written = write(i2c_fd, enable_cmd, 6);
+    if (written != 6) {
+        std::cerr << "⚠️  Enable encoder failed: " << strerror(errno) << std::endl;
+    } else {
+        std::cout << "✓ Encoder włączony" << std::endl;
+        usleep(50000); // 50ms na inicjalizację
+    }
+    
+    // Ustaw pozycję początkową na 0
+    std::cout << ">>> Ustawiam pozycję początkową na 0..." << std::endl;
+    uint8_t set_pos_cmd[6] = {0x11, 0x00, 0x00, 0x00, 0x00, 0x00};
+    written = write(i2c_fd, set_pos_cmd, 6);
+    if (written != 6) {
+        std::cerr << "⚠️  Set position failed: " << strerror(errno) << std::endl;
+    } else {
+        std::cout << "✓ Pozycja ustawiona" << std::endl;
+        usleep(50000);
+    }
+    
     // Teraz spróbuj odczytać pozycję encodera
     std::cout << "\n>>> Próba odczytu pozycji encodera (0x11:0x00)..." << std::endl;
     uint8_t encoder_cmd[2] = {0x11, 0x00};
