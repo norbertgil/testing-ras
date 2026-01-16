@@ -34,7 +34,39 @@ Navigate to: **Interface Options → I2C → Enable**
 
 Reboot your Raspberry Pi after enabling I2C.
 
-### 3. Verify I2C Connection
+### 3. **IMPORTANT: Set I2C Speed to 400 kHz**
+
+The ANO Encoder requires 400 kHz I2C speed (default is 100 kHz). This is **critical** for reliable encoder operation!
+
+**Automated setup:**
+```bash
+chmod +x setup_i2c_speed.sh
+./setup_i2c_speed.sh
+```
+
+**Manual setup:**
+```bash
+sudo nano /boot/firmware/config.txt
+# Or on older Pi: sudo nano /boot/config.txt
+```
+
+Add this line:
+```
+dtparam=i2c_arm_baudrate=400000
+```
+
+Save and reboot:
+```bash
+sudo reboot
+```
+
+**Verify the speed:**
+```bash
+chmod +x check_i2c_speed.sh
+./check_i2c_speed.sh
+```
+
+### 4. Verify I2C Connection
 
 After connecting your encoder, verify it's detected:
 
