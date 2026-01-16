@@ -7,7 +7,7 @@
 #include <iostream>
 
 ANOEncoder::ANOEncoder(uint8_t address, const char* i2c_device)
-    : device_address(address), i2c_fd(-1) {
+    : i2c_fd(-1), device_address(address) {
     // Open I2C device
     i2c_fd = open(i2c_device, O_RDWR);
     if (i2c_fd < 0) {
