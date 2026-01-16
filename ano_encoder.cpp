@@ -97,8 +97,11 @@ void ANOEncoder::setEncoderPosition(int32_t position) {
 }
 
 void ANOEncoder::enableEncoder() {
-    uint8_t buffer[1] = {0x01};
-    writeRegister(SEESAW_ENCODER_BASE, SEESAW_ENCODER_INTENSET, buffer, 1);
+    // Enable encoder interrupts (register 0x11, 0x10)
+    uint8_t enable_int[4] = {0x00, 0x00, 0x00, 0x01};
+    writeRegister(SEESAW_ENCODER_BASE, SEESAW_ENCODER_INTENSET, enable_int, 4);
+    
+    std::cout << "DEBUG: Encoder enabled" << std::endl;
 }
 
 void ANOEncoder::pinMode(uint8_t pin, uint8_t mode) {
