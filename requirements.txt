@@ -12,6 +12,7 @@
 #   pip3 install --break-system-packages -r requirements.txt
 
 # Core dependencies
-rpi-lgpio
+# Note: python3-lgpio should be installed system-wide via apt
+# If the system package is not available, rpi-lgpio will be used as fallback
 adafruit-blinka
 adafruit-circuitpython-seesaw
