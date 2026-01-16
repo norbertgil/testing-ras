@@ -8,8 +8,9 @@ COMPARE = compare_test
 SIMPLE = test_simple
 FIXED = ano_encoder_test_fixed
 RESET_TEST = test_with_reset
+ENCODER_DEBUG = test_encoder_debug
 
-all: $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE) $(SIMPLE) $(FIXED) $(RESET_TEST)
+all: $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE) $(SIMPLE) $(FIXED) $(RESET_TEST) $(ENCODER_DEBUG)
 
 $(TARGET): main.cpp ano_encoder.cpp
 	$(CXX) $(CXXFLAGS) -o $(TARGET) main.cpp ano_encoder.cpp
@@ -35,8 +36,11 @@ $(FIXED): main.cpp ano_encoder_fixed.cpp
 $(RESET_TEST): test_with_reset.cpp
 	$(CXX) $(CXXFLAGS) -o $(RESET_TEST) test_with_reset.cpp
 
+$(ENCODER_DEBUG): test_encoder_debug.cpp
+	$(CXX) $(CXXFLAGS) -o $(ENCODER_DEBUG) test_encoder_debug.cpp
+
 clean:
-	rm -f $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE) $(SIMPLE) $(FIXED) $(RESET_TEST)
+	rm -f $(TARGET) $(DIAGNOSTIC) $(ENCODER_ONLY) $(I2C_RAW) $(COMPARE) $(SIMPLE) $(FIXED) $(RESET_TEST) $(ENCODER_DEBUG)
 
 run: $(TARGET)
 	sudo ./$(TARGET)
@@ -61,4 +65,7 @@ fixed: $(FIXED)
 
 reset: $(RESET_TEST)
 	sudo ./$(RESET_TEST)
+
+encdebug: $(ENCODER_DEBUG)
+	sudo ./$(ENCODER_DEBUG)
 
