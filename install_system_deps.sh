@@ -11,6 +11,8 @@ echo "  - python3-dev (Python development headers)"
 echo "  - python3-pip (Python package installer)"
 echo "  - swig (Simplified Wrapper Interface Generator)"
 echo "  - i2c-tools (I2C utilities)"
+echo "  - libi2c-dev (I2C development library)"
+echo "  - python3-lgpio (lgpio Python library)"
 echo ""
 
 read -p "Continue? (y/N): " -n 1 -r
@@ -32,7 +34,8 @@ sudo apt-get install -y \
     python3-pip \
     swig \
     i2c-tools \
-    libi2c-dev
+    libi2c-dev \
+    python3-lgpio
 
 if [ $? -eq 0 ]; then
     echo ""
