@@ -2,11 +2,10 @@
 #include <cstdio>
 #include <string>
 #include <cstring>
+#include <map>
 #include <unistd.h>
 #include <signal.h>
 #include <sys/wait.h>
-
-// Prosty program C++ który uruchamia Python i czyta dane encodera
 
 volatile bool running = true;
 
@@ -16,7 +15,7 @@ void signal_handler(int signal) {
 
 int main() {
     std::cout << "========================================" << std::endl;
-    std::cout << "ANO Encoder - C++ + Python" << std::endl;
+    std::cout << "Encodery - ANO + 2x ENC + BTN (MCP23017)" << std::endl;
     std::cout << "========================================\n" << std::endl;
     
     // Obsługa Ctrl+C
@@ -43,9 +42,11 @@ int main() {
     
     char buffer[256];
     bool ready = false;
-    int last_position = 0;
-    int last_position2 = 0;
     int line_count = 0;
+
+    std::map<std::string, int> enc_positions;
+    const char* enc_names[] = {"ENCODER", "ENC2", "ENC3"};
+    for (auto name : enc_names) enc_positions[name] = 0;
     
     std::cout << "Czekam na inicjalizację...\n" << std::endl;
     
@@ -70,27 +71,23 @@ int main() {
             continue;
         }
         
-        // Parsuj dane
-        if (line.find("ENCODER2:") == 0) {
-            int position = std::stoi(line.substr(9));
-            std::cout << "🔄 Encoder2: " << position;
-            if (last_position2 != 0) {
-                int delta = position - last_position2;
-                std::cout << " (zmiana: " << (delta > 0 ? "+" : "") << delta << ")";
+        // Parsuj encodery (ENC2:, ENC3:, ENC4:, ENC5:, ENCODER:)
+        bool handled = false;
+        for (auto& [name, last_pos] : enc_positions) {
+            std::string prefix = name + ":";
+            if (line.find(prefix) == 0) {
+                int position = std::stoi(line.substr(prefix.size()));
+                int delta = position - last_pos;
+                std::cout << "🔄 " << name << ": " << position;
+                if (last_pos != 0)
+                    std::cout << " (" << (delta > 0 ? "+" : "") << delta << ")";
+                std::cout << std::endl;
+                last_pos = position;
+                handled = true;
+                break;
             }
-            std::cout << std::endl;
-            last_position2 = position;
         }
-        else if (line.find("ENCODER:") == 0) {
-            int position = std::stoi(line.substr(8));
-            std::cout << "🔄 Pozycja: " << position;
-            if (last_position != 0) {
-                int delta = position - last_position;
-                std::cout << " (zmiana: " << (delta > 0 ? "+" : "") << delta << ")";
-            }
-            std::cout << std::endl;
-            last_position = position;
-        }
+        if (handled) {}
         else if (line.find("BUTTON:") == 0) {
             size_t colon1 = line.find(':', 7);
             if (colon1 != std::string::npos) {

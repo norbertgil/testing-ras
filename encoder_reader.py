@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 """
-Odczyt dwóch encoderów:
-1) ANO encoder przez Seesaw (0x49)
-2) Zwykły rotary encoder przez MCP23017 expander (0x20) - A0/A1 encoder, A2 button
+Odczyt 3 encoderów + 1 przycisk:
+1) ANO encoder przez Seesaw (0x49) - ENCODER + 5 przycisków
+2-3) 2x rotary encoder przez MCP23017 (0x20):
+     ENC2: A0/A1/A2, ENC3: A3/A4/A5
+4) Przycisk BTN_EXT na A6
+Wolne: A7, B0-B7
 """
 import sys
 import time
@@ -11,7 +14,6 @@ print("STARTING", flush=True)
 
 try:
     import board
-    import busio
     from adafruit_seesaw import seesaw, rotaryio, digitalio
     from adafruit_mcp230xx.mcp23017 import MCP23017
     import digitalio as core_digitalio
@@ -19,6 +21,22 @@ try:
 except ImportError as e:
     print(f"ERROR:Import failed: {e}", flush=True)
     sys.exit(1)
+
+# pin_a, pin_b, pin_btn (MCP23017 pin numbers: 0-7 = GPA0-GPA7, 8-15 = GPB0-GPB7)
+MCP_ENCODERS = [
+    {"name": "ENC2", "pin_a": 0, "pin_b": 1, "pin_btn": 2},  # A0, A1, A2
+    {"name": "ENC3", "pin_a": 3, "pin_b": 4, "pin_btn": 5},  # A3, A4, A5
+]
+
+MCP_BUTTONS = [
+    {"name": "BTN_EXT", "pin": 6},  # A6
+]
+
+def setup_mcp_pin(mcp, pin_num):
+    pin = mcp.get_pin(pin_num)
+    pin.direction = core_digitalio.Direction.INPUT
+    pin.pull = core_digitalio.Pull.UP
+    return pin
 
 try:
     print("INIT_I2C", flush=True)
@@ -34,11 +52,8 @@ try:
         print(f"ERROR:Wrong product {product_id}", flush=True)
         sys.exit(1)
 
-    ss.pin_mode(1, ss.INPUT_PULLUP)
-    ss.pin_mode(2, ss.INPUT_PULLUP)
-    ss.pin_mode(3, ss.INPUT_PULLUP)
-    ss.pin_mode(4, ss.INPUT_PULLUP)
-    ss.pin_mode(5, ss.INPUT_PULLUP)
+    for pin in (1, 2, 3, 4, 5):
+        ss.pin_mode(pin, ss.INPUT_PULLUP)
 
     select = digitalio.DigitalIO(ss, 1)
     up = digitalio.DigitalIO(ss, 2)
@@ -49,41 +64,49 @@ try:
     encoder = rotaryio.IncrementalEncoder(ss)
     print("ANO_ENCODER_OK", flush=True)
 
-    # --- MCP23017 Expander (0x20) - drugi encoder ---
+    # --- MCP23017 Expander (0x20) - 4 encodery ---
     print("INIT_MCP23017", flush=True)
     mcp = MCP23017(i2c, address=0x20)
 
-    enc2_a = mcp.get_pin(0)  # GPA0
-    enc2_b = mcp.get_pin(1)  # GPA1
-    enc2_btn = mcp.get_pin(2)  # GPA2
+    enc_states = []
+    for cfg in MCP_ENCODERS:
+        pin_a = setup_mcp_pin(mcp, cfg["pin_a"])
+        pin_b = setup_mcp_pin(mcp, cfg["pin_b"])
+        pin_btn = setup_mcp_pin(mcp, cfg["pin_btn"])
+        enc_states.append({
+            "name": cfg["name"],
+            "pin_a": pin_a,
+            "pin_b": pin_b,
+            "pin_btn": pin_btn,
+            "position": 0,
+            "last_position": 0,
+            "last_a": pin_a.value,
+            "btn_state": False,
+        })
+        print(f"{cfg['name']}_OK", flush=True)
 
-    enc2_a.direction = core_digitalio.Direction.INPUT
-    enc2_a.pull = core_digitalio.Pull.UP
-    enc2_b.direction = core_digitalio.Direction.INPUT
-    enc2_b.pull = core_digitalio.Pull.UP
-    enc2_btn.direction = core_digitalio.Direction.INPUT
-    enc2_btn.pull = core_digitalio.Pull.UP
+    ext_btn_states = []
+    for cfg in MCP_BUTTONS:
+        pin = setup_mcp_pin(mcp, cfg["pin"])
+        ext_btn_states.append({
+            "name": cfg["name"],
+            "pin": pin,
+            "state": False,
+        })
+        print(f"{cfg['name']}_OK", flush=True)
 
     print("MCP23017_OK", flush=True)
-
-    # Software rotary decoder state
-    enc2_position = 0
-    enc2_last_a = enc2_a.value
-    enc2_last_b = enc2_b.value
-
     print("READY", flush=True)
 
     last_position = None
-    buttons = [
+    ano_buttons = [
         (select, "SELECT"),
         (up, "UP"),
         (down, "DOWN"),
         (left, "LEFT"),
-        (right, "RIGHT")
+        (right, "RIGHT"),
     ]
-    button_states = [False] * 5
-    enc2_last_position = 0
-    enc2_btn_state = False
+    ano_btn_states = [False] * 5
 
     while True:
         # --- ANO Encoder ---
@@ -92,39 +115,49 @@ try:
             print(f"ENCODER:{position}", flush=True)
             last_position = position
 
-        for i, (button, name) in enumerate(buttons):
+        for i, (button, name) in enumerate(ano_buttons):
             pressed = not button.value
-            if pressed and not button_states[i]:
+            if pressed and not ano_btn_states[i]:
                 print(f"BUTTON:{name}:PRESSED", flush=True)
-                button_states[i] = True
-            elif not pressed and button_states[i]:
+                ano_btn_states[i] = True
+            elif not pressed and ano_btn_states[i]:
                 print(f"BUTTON:{name}:RELEASED", flush=True)
-                button_states[i] = False
+                ano_btn_states[i] = False
 
-        # --- MCP23017 Encoder (software decoding) ---
-        a_val = enc2_a.value
-        b_val = enc2_b.value
+        # --- MCP23017 Encodery (software decoding) ---
+        for es in enc_states:
+            a_val = es["pin_a"].value
+            b_val = es["pin_b"].value
 
-        if a_val != enc2_last_a:
-            if a_val != b_val:
-                enc2_position += 1
-            else:
-                enc2_position -= 1
+            if a_val != es["last_a"]:
+                if a_val != b_val:
+                    es["position"] += 1
+                else:
+                    es["position"] -= 1
 
-            if enc2_position != enc2_last_position:
-                print(f"ENCODER2:{enc2_position}", flush=True)
-                enc2_last_position = enc2_position
+                if es["position"] != es["last_position"]:
+                    print(f"{es['name']}:{es['position']}", flush=True)
+                    es["last_position"] = es["position"]
 
-        enc2_last_a = a_val
-        enc2_last_b = b_val
+            es["last_a"] = a_val
 
-        btn_pressed = not enc2_btn.value
-        if btn_pressed and not enc2_btn_state:
-            print("BUTTON:ENCODER2:PRESSED", flush=True)
-            enc2_btn_state = True
-        elif not btn_pressed and enc2_btn_state:
-            print("BUTTON:ENCODER2:RELEASED", flush=True)
-            enc2_btn_state = False
+            btn_pressed = not es["pin_btn"].value
+            if btn_pressed and not es["btn_state"]:
+                print(f"BUTTON:{es['name']}:PRESSED", flush=True)
+                es["btn_state"] = True
+            elif not btn_pressed and es["btn_state"]:
+                print(f"BUTTON:{es['name']}:RELEASED", flush=True)
+                es["btn_state"] = False
+
+        # --- MCP23017 standalone buttons ---
+        for bs in ext_btn_states:
+            pressed = not bs["pin"].value
+            if pressed and not bs["state"]:
+                print(f"BUTTON:{bs['name']}:PRESSED", flush=True)
+                bs["state"] = True
+            elif not pressed and bs["state"]:
+                print(f"BUTTON:{bs['name']}:RELEASED", flush=True)
+                bs["state"] = False
 
 except KeyboardInterrupt:
     pass
