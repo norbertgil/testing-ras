@@ -16,3 +16,4 @@
 # If the system package is not available, rpi-lgpio will be used as fallback
 adafruit-blinka
 adafruit-circuitpython-seesaw
+adafruit-circuitpython-mcp230xx

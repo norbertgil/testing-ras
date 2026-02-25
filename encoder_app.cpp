@@ -44,6 +44,7 @@ int main() {
     char buffer[256];
     bool ready = false;
     int last_position = 0;
+    int last_position2 = 0;
     int line_count = 0;
     
     std::cout << "Czekam na inicjalizację...\n" << std::endl;
@@ -70,7 +71,17 @@ int main() {
         }
         
         // Parsuj dane
-        if (line.find("ENCODER:") == 0) {
+        if (line.find("ENCODER2:") == 0) {
+            int position = std::stoi(line.substr(9));
+            std::cout << "🔄 Encoder2: " << position;
+            if (last_position2 != 0) {
+                int delta = position - last_position2;
+                std::cout << " (zmiana: " << (delta > 0 ? "+" : "") << delta << ")";
+            }
+            std::cout << std::endl;
+            last_position2 = position;
+        }
+        else if (line.find("ENCODER:") == 0) {
             int position = std::stoi(line.substr(8));
             std::cout << "🔄 Pozycja: " << position;
             if (last_position != 0) {
